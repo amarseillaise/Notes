@@ -2,9 +2,8 @@ import datetime
 import os
 import xml
 import xml.etree.ElementTree as ET
-import time
 
-PATH = r".\Notes.xml"
+PATH = os.path.abspath(os.curdir) + r"\Notes.xml"
 
 
 def __check_xml_exist():
@@ -16,26 +15,61 @@ def __check_xml_exist():
             pass
 
 
-def write_to_file(header, string_to_append):
+def write_to_file(note_data):
+    __check_xml_exist()
 
+    if note_data[0] is None:  # if we want to add a new note id is None
+        try:
+            tree = ET.parse(PATH)
+        except xml.etree.ElementTree.ParseError:
+            new_root = ET.Element("root")
+            new_tree = ET.ElementTree(new_root)
+            new_tree.write(PATH)
+            tree = ET.parse(PATH)
+
+        root = tree.getroot()
+
+        new_note = ET.Element('note')
+        new_note.set('time', str(datetime.datetime.now().strftime("%d.%m.%Y %H:%M")))
+        new_note.set('id', str(len(root) + 1))
+        new_note.set('header', str(note_data[1]))
+        new_note.text = note_data[2]
+
+        root.append(new_note)
+    else:                     # if we want to edit existing note
+        tree = ET.parse(PATH)
+        root = tree.getroot()
+        note = root.find(f".//note[@id='{note_data[0]}']")
+        note.set("header", note_data[1])
+        note.text = note_data[2]
+
+    tree.write(PATH, encoding='UTF-8', xml_declaration=True)
+
+
+def read_xml_file():
     __check_xml_exist()
 
     try:
         tree = ET.parse(PATH)
+        root = tree.getroot()
+        return root
     except xml.etree.ElementTree.ParseError:
-        new_root = ET.Element("root")
-        new_tree = ET.ElementTree(new_root)
-        new_tree.write(PATH)
-        tree = ET.parse(PATH)
+        pass
 
+
+def delete_from_file(id_note):
+    __check_xml_exist()
+
+    tree = ET.parse(PATH)
     root = tree.getroot()
+    note = root.find(f".//note[@id='{id_note}']")
+    root.remove(note)
+    tree.write(PATH)
 
-    new_note = ET.Element('note')
-    new_note.set('time', str(datetime.datetime.now().strftime("%d.%m.%Y %H:%M")))
-    new_note.set('id', str(len(root) + 1))
-    new_note.set('header', str(header))
-    new_note.text = string_to_append
 
-    root.append(new_note)
+def get_note(id_note):
 
-    tree.write(PATH, encoding='UTF-8', xml_declaration=True)
+    tree = ET.parse(PATH)
+    root = tree.getroot()
+    note = root.find(f".//note[@id='{id_note}']")
+    return note.get("header"), note.text
