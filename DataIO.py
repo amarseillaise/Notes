@@ -2,6 +2,7 @@ import datetime
 import os
 import xml
 import xml.etree.ElementTree as ET
+import re
 
 PATH = os.path.abspath(os.curdir) + r"\Notes.xml"
 
@@ -73,3 +74,18 @@ def get_note(id_note):
     root = tree.getroot()
     note = root.find(f".//note[@id='{id_note}']")
     return note.get("header"), note.text
+
+
+def search_note(query):
+    if query is None:
+        return []
+    tree = ET.parse(PATH)
+    root = tree.getroot()
+    pattern = re.compile(query, flags=re.IGNORECASE)
+    results = []
+    for note in root.findall('note'):
+        content = note.text
+        if content and pattern.search(content):
+            results.append(note)
+    return results
+

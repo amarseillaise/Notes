@@ -2,7 +2,7 @@ from GUI.MainWindow import MainWindow
 
 
 def main():
-    MainWindow(1, 2)
+    MainWindow()
 
 
 if __name__ == "__main__":

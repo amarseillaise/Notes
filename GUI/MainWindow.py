@@ -1,15 +1,11 @@
 from tkinter import *
 from tkinter import ttk
-from tkinter import messagebox
 from DataIO import *
 from GUI import AdditNoteWindow
 
 
 class MainWindow:
-    def __init__(self, search_func, download_func):
-        self.company_list_in_window = None
-        self.search = search_func
-        self.download = download_func
+    def __init__(self):
 
         PURPLE = "#c2aed1"
         GREEN = "#84faac"
@@ -39,7 +35,7 @@ class MainWindow:
         self.text = Entry(self.frame, width=60)
         self.text.grid(row=0, column=0, padx=(120, 1), pady=15, sticky='w', columnspan=2)
 
-        self.button_search = Button(self.frame, text="Поиск", width=8, command=lambda: self.get_company())
+        self.button_search = Button(self.frame, text="Поиск", width=8, command=lambda: self.search(self.text.get()))
         self.button_search.grid(row=0, column=1, padx=(1, 1), pady=15, sticky='e')
 
         self.table = ttk.Treeview(self.frame, height=14, columns=columns, show="headings")
@@ -63,22 +59,8 @@ class MainWindow:
         self.button_del["bg"] = RED
         self.button_del.grid(row=2, column=1, padx=(1, 2), pady=5, sticky='e')
 
-        self.main_window.bind('<Return>', self.hit_return)  # hit Enter event
-
         self.update_table()
         self.main_window.mainloop()
-
-    def get_company(self):
-        for i in self.table.get_children():  # first clean the table if it almost has info
-            self.table.delete(i)
-
-        self.company_list_in_window = self.search(self.text.get())
-        try:
-            for company in self.company_list_in_window:
-                self.table.insert(parent='', index='end', text='',
-                                  values=(company.name, company.inn, company.adress))
-        except TypeError:
-            messagebox.showwarning("Внимание!", "Компаний с таким название не найдено")
 
     def get_addit_window(self):
         self.main_window.withdraw()
@@ -112,5 +94,9 @@ class MainWindow:
         except TypeError:
             pass
 
-    def hit_return(self, event=None):
-        self.get_company()
+    def search(self, query):
+        for i in self.table.get_children():  # first clean the table if it almost has info
+            self.table.delete(i)
+        for match in search_note(query):
+            self.table.insert(parent='', index='end', text='',
+                              values=(match.get("id"), match.get("header"), match.get("time")))
